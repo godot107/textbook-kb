@@ -1,0 +1,41 @@
+# ---------------------------------------------------------------------------
+# Textbook knowledge base configuration
+# Paths may be absolute or relative to this file.
+# ---------------------------------------------------------------------------
+
+# Where your textbook PDFs live (HDD — slow reads, but ingest is a one-time cost).
+source_dir: /media/williemaize/HDD/Textbooks
+
+# Where the Chroma vector store lives.
+# A SATA SSD is plenty: the HNSW index is loaded into RAM at query time, so the
+# SSD-vs-NVMe difference is negligible for a corpus this size.
+# NOTE: /media/williemaize/SSD is NTFS. SQLite-WAL was smoke-tested OK there, and
+# the store is rebuildable from the PDFs, so this is fine.
+chroma_path: /media/williemaize/SSD/textbook-kb
+collection_name: textbooks
+
+# ---------------------------------------------------------------------------
+# Embedding model
+# ---------------------------------------------------------------------------
+model_name: BAAI/bge-large-en-v1.5
+device: auto            # auto | cuda | cpu
+# BGE retrieval needs this instruction on QUERIES only (never on stored passages):
+query_prefix: "Represent this sentence for searching relevant passages: "
+batch_size: 64          # embedding batch; measured ~2.3 GB at 16, ~2.6 GB at 32 (inference is light), so 64 fits easily in 6 GB. Lower on OOM.
+use_fp16: true          # halves VRAM on the 6 GB 1660; little speed change on GTX 16-series
+
+# ---------------------------------------------------------------------------
+# Chunking (bge-large max context is 512 tokens)
+# ---------------------------------------------------------------------------
+max_tokens: 480
+overlap_tokens: 64
+min_chunk_chars: 64     # drop tiny fragments (page numbers, running headers)
+
+# ---------------------------------------------------------------------------
+# HNSW index — applied only when the collection is first created
+# ---------------------------------------------------------------------------
+hnsw:
+  space: cosine         # BGE is trained for cosine similarity
+  ef_construction: 200  # higher = better recall, slower one-time build
+  max_neighbors: 32     # graph degree (M); higher = better recall, more RAM/disk
+  ef_search: 80         # higher = better recall, slower per query

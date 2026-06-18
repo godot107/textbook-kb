@@ -1,0 +1,13 @@
+# Core
+chromadb>=0.5.0
+sentence-transformers>=2.7.0
+transformers>=4.40.0
+PyMuPDF>=1.24.0
+pyyaml>=6.0
+tqdm>=4.66.0
+
+# torch is intentionally NOT pinned here — install a CUDA build first so
+# sentence-transformers picks up the GPU. GTX 1660 (Turing sm_75) + driver 580
+# (CUDA 13-capable) runs any current wheel; cu128 is the newest channel offered:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128
+# Then: pip install -r requirements.txt
