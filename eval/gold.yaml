@@ -1,0 +1,51 @@
+# Gold set for retrieval evaluation (python cli.py eval).
+#
+# Each item: a query and the source(s) a good top-k hit should come from.
+#   expect_source: a substring of the source path, or a list of acceptable
+#                  substrings (matched case-insensitively; any match counts).
+#   expect_pages:  optional [lo, hi] printed-page range a hit should overlap.
+#
+# Starter set — distinctive topics tied to specific books in the store. Grow it
+# toward ~30 for a stable signal; add hard cases the pipeline currently misses.
+queries:
+  - query: "bias-variance tradeoff decomposition of expected prediction error"
+    expect_source: ["Elements of Statistical Learning", "ESLII_print12"]
+
+  - query: "steps of the knowledge discovery KDD process: data cleaning, integration, selection"
+    expect_source: ["Data Mining_ Concepts and Techniques-Morgan Kaufmann Publishers (2012)", "DataMining concepts and techniques"]
+
+  - query: "Minkowski distance generalizing Euclidean and Manhattan distance"
+    expect_source: ["Data Mining", "DataMining"]
+
+  - query: "random forest out-of-bag error and feature importance"
+    expect_source: ["Hands-On Machine Learning", "Elements of Statistical Learning", "ESLII_print12"]
+
+  - query: "maximum likelihood estimation consistency and asymptotic normality"
+    expect_source: ["All of Statistics", "Bishop-Pattern-Recognition"]
+
+  - query: "expectation maximization algorithm for Gaussian mixture models"
+    expect_source: ["Bishop-Pattern-Recognition"]
+
+  - query: "backpropagation and the chain rule for computing gradients"
+    expect_source: ["Goodfellow", "Deep Learning", "Bishop-Pattern-Recognition"]
+
+  - query: "Apriori algorithm for frequent itemset mining and association rules"
+    expect_source: ["Data Mining", "DataMining"]
+
+  - query: "support vector machine maximum margin separating hyperplane"
+    expect_source: ["Bishop-Pattern-Recognition", "Elements of Statistical Learning", "ESLII_print12"]
+
+  - query: "confusion matrix precision recall and F1 score"
+    expect_source: ["Hands-On Machine Learning"]
+
+  - query: "bootstrap resampling to estimate the standard error"
+    expect_source: ["All of Statistics", "Elements of Statistical Learning", "ESLII_print12"]
+
+  - query: "word2vec skip-gram word embeddings"
+    expect_source: ["Speech and Language Processing"]
+
+  - query: "TF-IDF term frequency inverse document frequency weighting"
+    expect_source: ["Speech and Language Processing"]
+
+  - query: "k-means clustering minimizing within-cluster sum of squares"
+    expect_source: ["Data Mining", "DataMining", "Bishop-Pattern-Recognition", "Elements of Statistical Learning", "ESLII_print12"]

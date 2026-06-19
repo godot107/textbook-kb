@@ -11,9 +11,11 @@ def resolve_device(pref):
 
 
 class Embedder:
-    def __init__(self, model_name, device="auto", use_fp16=True, query_prefix=""):
+    def __init__(self, model_name, device="auto", use_fp16=True, query_prefix="",
+                 cache_folder=None):
         self.device = resolve_device(device)
-        self.model = SentenceTransformer(model_name, device=self.device)
+        self.model = SentenceTransformer(model_name, device=self.device,
+                                         cache_folder=cache_folder)
         if use_fp16 and self.device == "cuda":
             self.model = self.model.half()
         self.query_prefix = query_prefix

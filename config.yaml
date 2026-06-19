@@ -9,10 +9,20 @@ source_dir: /media/williemaize/HDD/Textbooks
 # Where the Chroma vector store lives.
 # A SATA SSD is plenty: the HNSW index is loaded into RAM at query time, so the
 # SSD-vs-NVMe difference is negligible for a corpus this size.
-# NOTE: /media/williemaize/SSD is NTFS. SQLite-WAL was smoke-tested OK there, and
-# the store is rebuildable from the PDFs, so this is fine.
-chroma_path: /media/williemaize/SSD/textbook-kb
+# NOTE: this SSD is NTFS (mounted at /mnt/ssd). SQLite-WAL was smoke-tested OK
+# there, and the store is rebuildable from the PDFs, so this is fine.
+chroma_path: /mnt/ssd/textbook-kb
 collection_name: textbooks
+
+# ---------------------------------------------------------------------------
+# Model cache
+# Where HuggingFace model weights live. Co-located with the vector store on the
+# SSD so everything for this KB sits in one managed, rebuildable place (and off
+# the OS drive). This SSD is NTFS, where the HF hub's snapshot->blob SYMLINKS are
+# fragile, so the code sets HF_HUB_DISABLE_SYMLINKS=1 and the models are written
+# as real files. Leave null to fall back to the default ~/.cache/huggingface.
+# ---------------------------------------------------------------------------
+models_dir: /mnt/ssd/hf-cache
 
 # ---------------------------------------------------------------------------
 # Embedding model
@@ -39,3 +49,34 @@ hnsw:
   ef_construction: 200  # higher = better recall, slower one-time build
   max_neighbors: 32     # graph degree (M); higher = better recall, more RAM/disk
   ef_search: 80         # higher = better recall, slower per query
+
+# ---------------------------------------------------------------------------
+# Retrieval pipeline (over-fetch -> floor -> rerank -> diversify -> top-k)
+# ---------------------------------------------------------------------------
+retrieval:
+  candidate_k: 40       # how many ANN candidates to pull before rerank/MMR
+  min_sim: 0.30         # drop candidates below this cosine sim (kills junk; lets
+                        # the tool honestly return "nothing relevant")
+  mmr_lambda: 0.6       # 1.0 = pure relevance, 0.0 = pure diversity. Diversity
+                        # counters near-duplicate passages dominating the top-k.
+  mmr_enabled: true
+
+# Cross-encoder reranker — re-scores the candidate set with full query+passage
+# attention. Lazy-loaded on first use; if the model can't load (offline/OOM)
+# retrieval silently falls back to dense-only ranking.
+# DEFAULT OFF: on the current source-level gold set bge-reranker-base regressed
+# MRR (0.596->0.525). That metric can't see content-precision gains, so this is
+# "unproven", not "proven bad" — enable per call (--rerank / rerank=True) to try
+# it. Before defaulting it on, upgrade to bge-reranker-v2-m3 and validate with a
+# passage/relevance-level gold set (see TODO).
+rerank:
+  enabled: false
+  model_name: BAAI/bge-reranker-base   # upgrade: BAAI/bge-reranker-v2-m3 (bigger, multilingual)
+  batch_size: 32
+
+# ---------------------------------------------------------------------------
+# Data-quality health check (runs on MCP load when the cached report is stale)
+# ---------------------------------------------------------------------------
+quality:
+  max_age_days: 7       # re-scan if the cached report is older than this
+  check_on_load: true   # run the lightweight health check when the server starts

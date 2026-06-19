@@ -4,6 +4,17 @@ Semantic search over your data-science textbook library, fully local.
 
 PDFs → text (PyMuPDF) → token-aware chunks → **BGE-large** embeddings (GTX 1660) →
 **ChromaDB** persistent vector store with rich metadata for filtering and citations.
+Wired into **Claude Code** over MCP so an LLM can retrieve *and reason over* your
+own books, with citations.
+
+```
+PDFs ─▶ extract ─▶ chunk ─▶ embed (BGE) ─▶ ChromaDB
+                                              │
+  Claude Code ◀─ MCP tools ◀─ search: floor ▸ rerank ▸ MMR ◀┘
+```
+
+📖 **The story:** [blog post](blog/from-textbooks-to-a-knowledge-base-i-can-reason-with.md) ·
+☁️ **Going to prod:** [cloud deployment guide](docs/cloud-deployment.md)
 
 ## Setup
 
@@ -31,9 +42,10 @@ python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_
 Edit `config.yaml`:
 
 - `source_dir` — your PDFs (default `/media/williemaize/HDD/Textbooks`).
-- `chroma_path` — set to `/media/williemaize/SSD/textbook-kb` (SATA SSD, already
-  mounted, 831 GB free). It's NTFS; SQLite-WAL was smoke-tested OK there and the
-  store is rebuildable from the PDFs, so that's fine.
+- `chroma_path` — the SATA SSD at `/mnt/ssd/textbook-kb` (NTFS, ~830 GB free).
+  SQLite-WAL was smoke-tested OK there and the store is rebuildable, so that's fine.
+- `models_dir` — model weights cache, co-located on the SSD (`/mnt/ssd/hf-cache`).
+  The SSD is NTFS, so the code disables HF blob symlinks and writes real files.
 
 ## Use
 
@@ -42,8 +54,30 @@ python cli.py ingest                                  # build the index (resumab
 python cli.py query "what is regularization?" -k 8
 python cli.py query "kernel trick" --source "ESL.pdf" # restrict to one book
 python cli.py query "p-value" --contains "null hypothesis"  # require a keyword
+python cli.py query "gradient descent" --no-rerank --no-mmr  # dense-only
+
+python cli.py sources --filter "statistics"           # what's in the store
+python cli.py toc "<source path>"                     # a book's table of contents
+python cli.py audit --deep                            # duplicates / titles / garble
+python cli.py dedup --apply                           # remove duplicate books
+python cli.py eval                                    # measure retrieval quality
 python cli.py info
 ```
+
+## Retrieval pipeline
+
+Search is multi-stage: ANN over-fetch → cosine relevance floor → **cross-encoder
+rerank** (`bge-reranker-base`) → **MMR** diversification → top-k (all tunable in
+`config.yaml`). The reranker degrades gracefully to dense-only if it can't load.
+`python cli.py eval` scores baseline vs each stage on `eval/gold.yaml` (recall@k,
+MRR) so changes are measured, not guessed.
+
+## Data quality
+
+`audit` reports duplicate books (detected by **shared chunk content**, not title),
+junk embedded titles (fixed at display time via filename), and suspect/garbled
+extraction. `dedup` removes redundant copies and records them in an exclude list
+so re-ingest won't re-add them. A cached health check runs on MCP startup.
 
 ## Why these choices
 

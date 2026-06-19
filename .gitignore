@@ -1,5 +1,17 @@
 __pycache__/
 *.pyc
 .venv/
-chroma_store/
 *.log
+
+# Model weights cache and the Chroma vector store live on the SSD
+# (/mnt/ssd/hf-cache, /mnt/ssd/textbook-kb) — outside this repo, so they are
+# never committed. These guards also cover relative-path / local setups.
+hf-cache/
+models/
+chroma_store/
+*.sqlite3
+
+# State files Chroma/ingest write into chroma_path (also on the SSD):
+ingest_manifest.json
+excluded_sources.json
+quality_report.json

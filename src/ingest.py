@@ -27,6 +27,18 @@ def _doc_id(rel_path, idx):
     return f"{h}:{idx}"
 
 
+def _dedup_chunks(chunks):
+    """Drop exact-duplicate chunks within a book (repeated headers/boilerplate
+    that PDF extraction can emit), preserving order."""
+    seen, out = set(), []
+    for c in chunks:
+        h = hashlib.sha1(c["text"].encode("utf-8")).hexdigest()
+        if h not in seen:
+            seen.add(h)
+            out.append(c)
+    return out
+
+
 def get_collection(cfg):
     client = chromadb.PersistentClient(path=cfg.chroma_path)
     coll = client.get_or_create_collection(
@@ -55,21 +67,29 @@ def _upsert_batched(coll, ids, embeddings, documents, metadatas, batch=1000):
 
 
 def ingest(cfg):
+    from src.dedup import load_excluded
+
     _, coll = get_collection(cfg)
-    embedder = Embedder(cfg.model_name, cfg.device, cfg.use_fp16, cfg.query_prefix)
+    embedder = Embedder(cfg.model_name, cfg.device, cfg.use_fp16, cfg.query_prefix,
+                        cache_folder=cfg.models_dir)
     chunker = Chunker(cfg.model_name, cfg.max_tokens, cfg.overlap_tokens, cfg.min_chunk_chars)
 
     store = Path(cfg.chroma_path)
     store.mkdir(parents=True, exist_ok=True)
     manifest_path = store / "ingest_manifest.json"
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    excluded = load_excluded(cfg)  # duplicate books pruned by `dedup --apply`
 
     pdfs = sorted(glob.glob(os.path.join(cfg.source_dir, "**", "*.pdf"), recursive=True))
     print(f"Found {len(pdfs)} PDFs under {cfg.source_dir}  (device={embedder.device})")
+    if excluded:
+        print(f"Skipping {len(excluded)} source(s) on the exclude list.")
 
     new_chunks = 0
     for pdf in tqdm(pdfs, desc="Books"):
         rel = os.path.relpath(pdf, cfg.source_dir)
+        if rel in excluded:
+            continue
         fp = _fingerprint(pdf)
         if manifest.get(rel) == fp:
             continue
@@ -79,7 +99,7 @@ def ingest(cfg):
             tqdm.write(f"[skip] {rel}: {e}")
             continue
 
-        chunks = chunker.chunk_pages(pages)
+        chunks = _dedup_chunks(chunker.chunk_pages(pages))
         if chunks:
             texts = [c["text"] for c in chunks]
             embs = embedder.embed_documents(texts, batch_size=cfg.batch_size).tolist()

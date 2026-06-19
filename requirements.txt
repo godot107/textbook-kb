@@ -1,10 +1,15 @@
 # Core
 chromadb>=0.5.0
-sentence-transformers>=2.7.0
+sentence-transformers>=2.7.0   # also provides CrossEncoder (reranker)
 transformers>=4.40.0
 PyMuPDF>=1.24.0
+numpy>=1.24.0                  # MMR diversification math in src/retrieve.py
 pyyaml>=6.0
 tqdm>=4.66.0
+
+# MCP server (mcp_server.py) — lets Claude Code query the KB as a native tool
+# with the model held resident, so weights load once per session, not per query.
+mcp>=1.28.0
 
 # torch is intentionally NOT pinned here — install a CUDA build first so
 # sentence-transformers picks up the GPU. GTX 1660 (Turing sm_75) + driver 580
