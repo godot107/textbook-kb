@@ -12,7 +12,9 @@ Six years later, those books have a strange status in my life. They taught me th
 
 And I almost never open them.
 
-> 🎞️ **GIF:** Giphy search *"blowing dust off old book"* — *(Medium: **+ → GIF → search**)*
+![An old book, reopened](https://media.giphy.com/media/NWm94MaCIQ8BJBgstp/giphy.gif)
+
+*My most trusted references, circa every day before this project. (via GIPHY)*
 
 The friction is too high. When I need to remember exactly how the bias–variance decomposition falls out, or the precise steps of the KDD process, or which distance metric Han recommends for mixed attribute types, I don't go digging through a 700-page PDF. I Google it. Or I ask an LLM and hope it isn't hallucinating. My best sources sit on disk, indexed by nothing, searchable only by my increasingly unreliable memory.
 
@@ -26,7 +28,9 @@ This post is about how it works, what surprised me building it, and why I think 
 
 Most people now reach for a general-purpose chatbot when they have a question. That's great for a lot of things and genuinely bad for others: the model answers from a blurry average of the whole internet, it can't cite where an answer came from, and it will occasionally invent a formula with total confidence.
 
-> 🎞️ **GIF:** Giphy search *"confidently incorrect"* (the "math lady / confused calculations" one is perfect)
+![Confused math lady surrounded by equations](https://media.giphy.com/media/hQKJwKAzq5NERlLf8L/giphy.gif)
+
+*An LLM confidently deriving a formula it doesn't actually know. (via GIPHY)*
 
 Retrieval-augmented generation (RAG) flips that. Instead of asking the model to recall facts, you:
 
@@ -65,7 +69,9 @@ A few of the choices that mattered:
 
 Here's the unglamorous truth of any real RAG project. The retrieval algorithm is maybe 20% of the work. The other 80% is discovering that your data is dirtier than you think.
 
-> 🎞️ **GIF:** Giphy search *"this is fine fire"* (the dog in the burning room — every data project, ever)
+![This is fine dog in a burning room](https://media.giphy.com/media/QMHoU66sBXqqLqYvGO/giphy.gif)
+
+*Auditing your own corpus for the first time. (via GIPHY)*
 
 When I actually audited my corpus, I found:
 
@@ -93,7 +99,9 @@ I wrote a small gold set of questions tied to the books that should answer them,
 
 The reranker made things *worse* on my metric.
 
-> 🎞️ **GIF:** Giphy search *"well that backfired"* or *"surprised pikachu"* (the best-practice that wasn't)
+![Surprised Pikachu](https://media.giphy.com/media/qUGaiEoFm0BnwK5kjA/giphy.gif)
+
+*Me, watching the "biggest precision win in RAG" make things worse. (via GIPHY)*
 
 Now — that metric is imperfect. It checks whether the right *book* showed up, which is saturated and can't see whether a passage's *content* got more relevant (exactly what a reranker is for). So the honest reading isn't "rerankers are bad." It's "on the evidence I have, this reranker model isn't earning its place, and I will not turn it on by default and pretend it's an improvement." I left it implemented, off by default, one flag away, with a written plan to re-test it with a stronger model and a better gold set.
 
@@ -111,7 +119,9 @@ I ask about the bias–variance tradeoff and get the passage from *Practical Sta
 
 It is, functionally, a conversation with my own bookshelf — except the bookshelf has read all of itself and can cross-reference instantly.
 
-> 🎞️ **GIF:** Giphy search *"mind blown"* (the slow-motion head-explosion — the moment it clicks)
+![Mind blown head explosion](https://media.giphy.com/media/UvWllmm27ZaNbRpv2n/giphy.gif)
+
+*Asking your bookshelf a question and watching it answer, with citations. (via GIPHY)*
 
 ---
 
