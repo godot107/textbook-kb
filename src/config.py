@@ -28,6 +28,17 @@ class Config:
             os.environ.setdefault("HF_HOME", self.models_dir)
             os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS", "1")
 
+        # Offline mode. The models are cached locally (see models_dir), so by
+        # default we never let HF phone home: without this, transformers HEADs
+        # huggingface.co on load (e.g. probing for adapter_config.json) and a DNS
+        # failure crashes the whole run instead of falling back to the cache. Set
+        # offline: false in config.yaml (or export HF_HUB_OFFLINE=0) to download a
+        # new model/reranker. setdefault so a shell override still wins.
+        self.offline = bool(d.get("offline", True))
+        if self.offline:
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
+            os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
         self.model_name = d.get("model_name", "BAAI/bge-large-en-v1.5")
         self.device = d.get("device", "auto")
         self.query_prefix = d.get("query_prefix", "")

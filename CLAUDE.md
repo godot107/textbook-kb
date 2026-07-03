@@ -83,3 +83,8 @@ we actually observed).
   `max_tokens` — the pipeline is otherwise model-agnostic.
 - **Resumability:** `chroma_path/ingest_manifest.json` tracks mtime+size per file;
   re-running `ingest` only processes new/changed PDFs (upsert keeps ids stable).
+- **Offline by default:** weights are cached under `models_dir`, so `config.py` sets
+  `HF_HUB_OFFLINE`/`TRANSFORMERS_OFFLINE` (config `offline: true`). Without it,
+  transformers HEADs huggingface.co on load and a DNS failure hard-crashes the run
+  instead of hitting the cache. Set `offline: false` (or `export HF_HUB_OFFLINE=0`)
+  to download a new model/reranker.

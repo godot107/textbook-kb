@@ -24,6 +24,13 @@ collection_name: textbooks
 # ---------------------------------------------------------------------------
 models_dir: /mnt/ssd/hf-cache
 
+# Run HF fully offline (load cached weights, never reach huggingface.co). Default
+# true: the models above are already cached, and without this a HEAD to the hub on
+# model load (e.g. probing for adapter_config.json) turns a DNS failure into a hard
+# crash instead of a cache hit. Set false (or export HF_HUB_OFFLINE=0) only when you
+# need to download a new model/reranker.
+offline: true
+
 # ---------------------------------------------------------------------------
 # Embedding model
 # ---------------------------------------------------------------------------
