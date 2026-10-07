@@ -87,6 +87,12 @@ we actually observed).
   *not* recorded in the manifest — replace with an OCR'd copy and re-run `ingest`.
 - **Resumability:** `chroma_path/ingest_manifest.json` tracks mtime+size per file;
   re-running `ingest` only processes new/changed PDFs (upsert keeps ids stable).
+- **Source paths are identity:** chunk ids, `source` metadata, the manifest, the exclude
+  list and `eval/gold.yaml` all key on the path relative to `source_dir`. The library is
+  organized into topic folders with `Author - Title (Year).pdf` names; don't move/rename
+  books without migrating those (re-key ids, copy stored vectors) or `ingest` will
+  re-embed them and leave orphaned duplicate chunks. Course/practice material lives in
+  `HDD/Practice/` and non-book leftovers in `HDD/Textbooks-extras/`, outside the KB.
 - **Offline by default:** weights are cached under `models_dir`, so `config.py` sets
   `HF_HUB_OFFLINE`/`TRANSFORMERS_OFFLINE` (config `offline: true`). Without it,
   transformers HEADs huggingface.co on load and a DNS failure hard-crashes the run
