@@ -1,7 +1,7 @@
 # textbook-kb
 
-Local semantic-search knowledge base over a library of data-science textbook PDFs.
-PDFs are extracted, chunked, embedded with **BAAI/bge-large-en-v1.5** (on a GTX 1660
+Local semantic-search knowledge base over a library of data-science textbooks (PDF + EPUB).
+Books are extracted, chunked, embedded with **BAAI/bge-large-en-v1.5** (on a GTX 1660
 via sentence-transformers), and stored in a **persistent ChromaDB** collection.
 
 ## Run
@@ -52,7 +52,7 @@ we actually observed).
 ## Layout
 
 - `config.yaml` — all paths and tunables (model cache, chunking, HNSW, retrieval, quality).
-- `src/extract.py` — PyMuPDF text extraction + de-hyphenation cleanup.
+- `src/extract.py` — PyMuPDF text extraction (PDF + EPUB, one code path) + de-hyphenation cleanup.
 - `src/chunk.py` — token-aware, page-tracking chunker (480-token budget, 64 overlap).
 - `src/embed.py` — BGE wrapper: fp16, normalize, **query-only instruction prefix**, `cache_folder`.
 - `src/rerank.py` — lazy cross-encoder reranker with graceful fallback.
@@ -81,6 +81,10 @@ we actually observed).
 - **Context limit:** bge-large is 512 tokens. If chunk fragmentation hurts retrieval,
   switch `model_name` to a long-context model (bge-m3, nomic-embed-text-v1.5) and bump
   `max_tokens` — the pipeline is otherwise model-agnostic.
+- **EPUB:** MuPDF opens EPUBs natively; their "pages" are reflowed at MuPDF's default
+  layout (not print pages), and `get_toc` uses the same layout so refs line up.
+- **Scanned (image-only) books** have no text layer and are skipped with a warning and
+  *not* recorded in the manifest — replace with an OCR'd copy and re-run `ingest`.
 - **Resumability:** `chroma_path/ingest_manifest.json` tracks mtime+size per file;
   re-running `ingest` only processes new/changed PDFs (upsert keeps ids stable).
 - **Offline by default:** weights are cached under `models_dir`, so `config.py` sets

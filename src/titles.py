@@ -24,7 +24,7 @@ _HEXBLOB = re.compile(r"\b[0-9a-f]{16,}\b", re.IGNORECASE)  # md5/sha download i
 _MULTISPACE = re.compile(r"\s{2,}")
 _DASH_RUNS = re.compile(r"(\s*[-–—_]\s*){2,}")
 _DEDUP_TITLE = re.compile(r"^(.*?)(?:\s*:\s*\1)+$", re.IGNORECASE)  # "X : X" -> "X"
-_JUNK_TITLES = {"", "untitled", "title", "microsoft word", "pdf", "document"}
+_JUNK_TITLES = {"", "untitled", "title", "microsoft word", "pdf", "epub", "document"}
 
 
 def _collapse_repeat(s: str) -> str:

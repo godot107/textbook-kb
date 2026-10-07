@@ -104,7 +104,7 @@ def list_sources(filter: Optional[str] = None, limit: int = 60) -> str:
 
 @mcp.tool()
 def get_toc(source: str) -> str:
-    """Return a book's table of contents (from its PDF outline). Use the exact
+    """Return a book's table of contents (from its PDF/EPUB outline). Use the exact
     `source` path from list_sources. Great for chapter/section-level questions."""
     _ensure_loaded()
     with contextlib.redirect_stdout(sys.stderr):

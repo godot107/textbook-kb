@@ -22,7 +22,7 @@ def main():
     ap.add_argument("--config", default="config.yaml")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    sub.add_parser("ingest", help="Extract, chunk, embed and store all PDFs")
+    sub.add_parser("ingest", help="Extract, chunk, embed and store all PDFs and EPUBs")
 
     q = sub.add_parser("query", help="Semantic search over the corpus")
     q.add_argument("text")

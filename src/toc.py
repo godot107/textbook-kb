@@ -1,4 +1,4 @@
-"""Table-of-contents extraction from a PDF's outline (PyMuPDF).
+"""Table-of-contents extraction from a book's outline (PyMuPDF; PDF or EPUB).
 
 Useful for chapter/section-level navigation — e.g. "summarize chapter 2" — which
 flat semantic search serves poorly. Also lets us map a hit's page to its
@@ -8,12 +8,14 @@ import os
 
 import fitz
 
+import src.extract  # noqa: F401  (silences MuPDF EPUB CSS warnings)
+
 
 def _abs_path(cfg, source):
-    """Resolve a stored relative `source` back to its PDF on disk."""
+    """Resolve a stored relative `source` back to its file on disk."""
     p = source if os.path.isabs(source) else os.path.join(cfg.source_dir, source)
     if not os.path.exists(p):
-        raise FileNotFoundError(f"PDF not found for source '{source}' (looked at {p})")
+        raise FileNotFoundError(f"Book not found for source '{source}' (looked at {p})")
     return p
 
 

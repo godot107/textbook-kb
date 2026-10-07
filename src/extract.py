@@ -1,8 +1,19 @@
-"""PDF text extraction with light textbook-aware cleanup (PyMuPDF)."""
+"""PDF/EPUB text extraction with light textbook-aware cleanup (PyMuPDF).
+
+MuPDF opens EPUBs natively and lays them out into pages, so both formats share
+one code path. EPUB "pages" are reflowed at MuPDF's default layout (not print
+pages), and `toc.get_toc` uses the same layout, so page refs stay consistent.
+"""
 import os
 import re
 
 import fitz  # PyMuPDF
+
+BOOK_EXTS = (".pdf", ".epub")
+
+# EPUB stylesheets routinely trip MuPDF's CSS parser; the warnings are harmless
+# noise on stderr, so silence them.
+fitz.TOOLS.mupdf_display_errors(False)
 
 _WS = re.compile(r"[ \t]+")
 _MULTINL = re.compile(r"\n{3,}")
@@ -16,7 +27,7 @@ def _clean(text):
     return text.strip()
 
 
-def extract_pdf(path):
+def extract_book(path):
     """Return (pages, meta).
 
     pages: list of {"page": int (1-based), "text": str}

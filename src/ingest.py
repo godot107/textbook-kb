@@ -1,7 +1,7 @@
-"""Ingest pipeline: walk PDFs -> extract -> chunk -> embed -> upsert into Chroma.
+"""Ingest pipeline: walk PDFs/EPUBs -> extract -> chunk -> embed -> upsert into Chroma.
 
 Resumable: a manifest records each file's mtime+size, so re-running only
-processes new or changed PDFs.
+processes new or changed books.
 """
 import glob
 import hashlib
@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 from src.chunk import Chunker
 from src.embed import Embedder
-from src.extract import extract_pdf
+from src.extract import BOOK_EXTS, extract_book
 
 
 def _fingerprint(path):
@@ -80,23 +80,33 @@ def ingest(cfg):
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
     excluded = load_excluded(cfg)  # duplicate books pruned by `dedup --apply`
 
-    pdfs = sorted(glob.glob(os.path.join(cfg.source_dir, "**", "*.pdf"), recursive=True))
-    print(f"Found {len(pdfs)} PDFs under {cfg.source_dir}  (device={embedder.device})")
+    books = sorted(
+        p for ext in BOOK_EXTS
+        for p in glob.glob(os.path.join(cfg.source_dir, "**", f"*{ext}"), recursive=True)
+    )
+    print(f"Found {len(books)} books ({'/'.join(e[1:] for e in BOOK_EXTS)}) under "
+          f"{cfg.source_dir}  (device={embedder.device})")
     if excluded:
         print(f"Skipping {len(excluded)} source(s) on the exclude list.")
 
     new_chunks = 0
-    for pdf in tqdm(pdfs, desc="Books"):
-        rel = os.path.relpath(pdf, cfg.source_dir)
+    for book in tqdm(books, desc="Books"):
+        rel = os.path.relpath(book, cfg.source_dir)
         if rel in excluded:
             continue
-        fp = _fingerprint(pdf)
+        fp = _fingerprint(book)
         if manifest.get(rel) == fp:
             continue
         try:
-            pages, meta = extract_pdf(pdf)
+            pages, meta = extract_book(book)
         except Exception as e:  # noqa: BLE001
             tqdm.write(f"[skip] {rel}: {e}")
+            continue
+        if not pages:
+            # Image-only scan: nothing to embed. Leave it out of the manifest so
+            # it is picked up automatically once an OCR'd copy replaces it.
+            tqdm.write(f"[skip] {rel}: no extractable text ({meta['n_pages']} pages; "
+                       "scanned? needs OCR)")
             continue
 
         chunks = _dedup_chunks(chunker.chunk_pages(pages))
